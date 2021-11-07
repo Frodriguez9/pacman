@@ -1,5 +1,7 @@
 import { layout } from './layout.js'
 const grid = document.querySelector('.grid')
+const gridHight = 28
+const gridLength = 28
 let squares = []
 
 const score = document.getElementById('score')
@@ -23,7 +25,7 @@ function createBoard() {
     } else if (i === 1) {
         squere.classList.add('wall')
     } else if (i === 3) {
-        squere.classList.add('power-pallet')
+        squere.classList.add('power-pellet')
     }
 
     grid.appendChild(squere)
@@ -39,33 +41,75 @@ let pacmanCurrentIndex = 490
 squares[pacmanCurrentIndex].classList.add('pacman')
 
 // set movement
-let direction
+let control
 
-// directions:
-//  -1 = left
-//  +1 = right
-//  +28 = up
-//  -28 = down
+  // control:
+  //  -1 = left
+  //  +1 = right
+  //  +28 = up
+  //  -28 = down
 
-document.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") {
-        move(-1)
+function updatePadmanPosition(control=null, atBorder=null) {
+      // remove pacman from current position in UI
+      squares[pacmanCurrentIndex].classList.remove('pacman')
 
-    } else if (e.key === "ArrowRight") {
-       move(1)
-    } else if (e.key === "ArrowDown") {
-        move(28)
-    } else if (e.key === "ArrowUp"){
-        move(-28)
-    }
-})
+      // assign pacman's new postion
+      if (atBorder==="right") { // when pacman is at right border with secret tunel
+        pacmanCurrentIndex -= (gridLength - 1)
+      } else if (atBorder==="left") { // when pacman is at left border with secret tunel
+        pacmanCurrentIndex += (gridLength - 1)
+      } else { // when padman is anywhere in the path
+        pacmanCurrentIndex += control
+      }
+
+      // assign pacman to its new postion in UI
+      squares[pacmanCurrentIndex].classList.add('pacman')
+}
+
 
 function move(direction) {
-    // check if pacman is not hitting a wall
-    if (!squares[pacmanCurrentIndex + direction].classList.contains('wall')) {
-        squares[pacmanCurrentIndex].classList.remove('pacman')
-        pacmanCurrentIndex = pacmanCurrentIndex + direction
-        squares[pacmanCurrentIndex].classList.add('pacman')
+    let potentialNewPostion = squares[pacmanCurrentIndex + direction]
+    // check if path contains "secret tunnel"
+    //    Passing throughout right border
+    if ((pacmanCurrentIndex + 1) % 28 === 0 && direction === 1) {
+      updatePadmanPosition(null, "right")
+    } //    Passing throughout Left border
+    else if (pacmanCurrentIndex % 28 === 0 && direction === -1) {
+      updatePadmanPosition(null, "left")
+    }// check if pacman is not hitting a wall
+    else if (!potentialNewPostion.classList.contains('wall')) {
+        updatePadmanPosition(direction)
+    }
+
+}
+
+
+document.addEventListener("keydown", (e) => {
+
+    switch (e.key) {
+      case "Up": // IE/Edge
+        move(-28)
+      case "ArrowUp":
+        move(-28)
+        break
+
+      case "Right": // IE/Edge
+        move(1)
+      case "ArrowRight":
+        move(1)
+        break
+
+      case "Down":  // IE/Edge
+        move(28)
+      case "ArrowDown":
+        move(28)
+        break
+
+      case "Left": // IE/Edge
+        move(-1)
+      case "ArrowLeft":
+        move(-1)
+        break
     }
 
     // add points if pacman eats a pac-dot
@@ -74,4 +118,5 @@ function move(direction) {
         points += 10
         document.getElementById('score').textContent = points
     }
-}
+
+})
